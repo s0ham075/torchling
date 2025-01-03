@@ -28,7 +28,7 @@ class ReLU(Activation):
             return np.maximum(0,x)
         
         def relu_prime(x):
-            return 1 if x > 0 else 0
+            return np.where(x > 0, 1, 0)
         
         super().__init__(relu,relu_prime)
 

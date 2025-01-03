@@ -10,5 +10,5 @@ class Activation(Layer):
         self.input = input 
         return self.activation(self.input)
     
-    def backward(self,grad):
+    def backward(self,grad,alpha = 0.01):
         return np.multiply(grad,self.activation_prime(self.input))
