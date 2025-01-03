@@ -12,3 +12,5 @@ class MSE(Loss):
         
         def mse_prime(y_true,y_pred):
             return (2*(y_pred - y_true)) / np.size(y_true)
+    
+        super().__init__(mse,mse_prime)
