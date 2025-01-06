@@ -28,7 +28,8 @@ class Hidden(Layer):
     
     def backward(self,grad,alpha = 0.01):
         weights_grad = np.matmul(grad,self.input.T)
-        x = alpha * weights_grad
+        bias_grad = np.sum(grad, axis=1, keepdims=True)
+    
         self.weights -= alpha * weights_grad
-        self.bias -= alpha * grad
+        self.bias -= alpha * bias_grad
         return np.matmul(self.weights.T,grad)
