@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "torchling"  
+version = "0.0.1"          
+description = "An extremely basic pytorch ripoff (nowhere near actual pytorch). Which contains all of my from scratch implementation of Dl things"
+authors = ["Soham Sawant <sohamsawant075@gmail.com>"]  
+license = "MIT"            
+readme = "README.md"        
+repository = "https://github.com/s0ham075/torchling"
+
+
+[tool.poetry.dependencies]
+python = ">=3.10"         
+numpy = "2.2.1"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+

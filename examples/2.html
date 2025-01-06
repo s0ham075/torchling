@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Neural Network Visualization</title>
+    <style>
+        /* Previous styles remain the same until .plot */
+        :root {
+            --primary: #3b82f6;
+            --secondary: #ef4444;
+            --background: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --grid: #f1f5f9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #64748b;
+        }
+
+        .top-container {
+            background-color: var(--card);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 35vh;
+        }
+
+        .main-plot {
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            position: relative;
+        }
+
+        .slider-container {
+            background-color: var(--card);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .slider {
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem 0;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--grid);
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .plots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .plot {
+            background-color: var(--card);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 1rem;
+            position: relative;
+            aspect-ratio: 1;
+            width: 100%;
+            height: 300px;
+            /* Fixed height */
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 1rem;
+        }
+
+        .value-display {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .plots-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HTML structure remains the same -->
+    <div class="header">
+        <h1>Neural Network Layer Visualization</h1>
+        <p>Explore how each neuron responds to different input values</p>
+    </div>
+
+    <div class="top-container">
+        <div class="main-plot">
+            <canvas id="canvas9"></canvas>
+        </div>
+    </div>
+
+    <div class="slider-container">
+        <label for="xSlider">Input Value</label>
+        <input type="range" min="-10" max="10" step="0.1" value="0" class="slider" id="xSlider">
+        <div class="value-display">x = <span id="xValue">0.00</span></div>
+    </div>
+
+    <div class="plots-grid">
+        <div class="plot"><canvas id="canvas1"></canvas></div>
+        <div class="plot"><canvas id="canvas2"></canvas></div>
+        <div class="plot"><canvas id="canvas3"></canvas></div>
+        <div class="plot"><canvas id="canvas4"></canvas></div>
+        <div class="plot"><canvas id="canvas5"></canvas></div>
+        <div class="plot"><canvas id="canvas6"></canvas></div>
+        <div class="plot"><canvas id="canvas7"></canvas></div>
+        <div class="plot"><canvas id="canvas8"></canvas></div>
+    </div>
+
+    <script>
+        const weights_layer1 = [0.38451323, -0.24923242, 0.68425363, 0.38631511, -0.42454637, -0.49184521, -0.19948901, -0.5889988];
+        const biases_layer1 = [0.81057517, -0.34714969, -0.94844159, -0.92133055, -0.59156027, -0.69207904, 0.34630943, 1.00818593];
+        const weights_layer2 = [0.83510696, 0.44998368, -1.10021663, -1.19525465, 0.7734859, 0.80762141, -0.30300423, -0.5536479];
+
+        function relu(x) {
+            return Math.max(0, x);
+        }
+
+        const canvasIDs = ['canvas1', 'canvas2', 'canvas3', 'canvas4', 'canvas5', 'canvas6', 'canvas7', 'canvas8', 'canvas9'];
+        const canvases = canvasIDs.map(id => document.getElementById(id));
+
+        function resizeCanvases() {
+            canvases.forEach(canvas => {
+                const container = canvas.parentElement;
+                const rect = container.getBoundingClientRect();
+
+                // Set canvas dimensions to match container
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+
+                // Initial draw after resize
+                const ctx = canvas.getContext('2d');
+                ctx.scale(1, 1); // Reset scale
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvases();
+            updatePlots(parseFloat(slider.value));
+        });
+
+        resizeCanvases();
+
+        const contexts = canvases.map(canvas => canvas.getContext('2d'));
+
+        function mapToCanvas(x, y, canvas) {
+            return {
+                x: (x + 10) * (canvas.width / 20),
+                y: canvas.height - ((y + 10) * (canvas.height / 20))
+            };
+        }
+
+        function drawAxes(ctx, canvas) {
+            // Draw grid
+            ctx.strokeStyle = 'var(--grid)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 0; i <= 20; i++) {
+                const pos = (i * canvas.width) / 20;
+                ctx.moveTo(pos, 0);
+                ctx.lineTo(pos, canvas.height);
+                ctx.moveTo(0, i * canvas.height / 20);
+                ctx.lineTo(canvas.width, i * canvas.height / 20);
+            }
+            ctx.stroke();
+
+            // Draw main axes
+            ctx.strokeStyle = 'var(--border)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+        }
+
+        function drawFunction(ctx, canvas, func) {
+            ctx.strokeStyle = 'var(--primary)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            let firstPoint = true;
+            for (let i = -10; i <= 10; i += 0.1) {
+                const y = func(i);
+                const point = mapToCanvas(i, y, canvas);
+                if (firstPoint) {
+                    ctx.moveTo(point.x, point.y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            }
+            ctx.stroke();
+        }
+
+        function drawPoint(ctx, canvas, x, y) {
+            const point = mapToCanvas(x, y, canvas);
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fillStyle = 'var(--secondary)';
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        const functions = [
+            x => relu(weights_layer1[0] * x + biases_layer1[0]),
+            x => relu(weights_layer1[1] * x + biases_layer1[1]),
+            x => relu(weights_layer1[2] * x + biases_layer1[2]),
+            x => relu(weights_layer1[3] * x + biases_layer1[3]),
+            x => relu(weights_layer1[4] * x + biases_layer1[4]),
+            x => relu(weights_layer1[5] * x + biases_layer1[5]),
+            x => relu(weights_layer1[6] * x + biases_layer1[6]),
+            x => relu(weights_layer1[7] * x + biases_layer1[7]),
+            x => {
+                let sum = 0;
+                for (let i = 0; i < 8; i++) {
+                    const firstLayer = relu(weights_layer1[i] * x + biases_layer1[i]);
+                    sum += weights_layer2[i] * firstLayer;
+                }
+                return sum;
+            }
+        ];
+
+        function updatePlots(x) {
+            functions.forEach((func, i) => {
+                const ctx = contexts[i];
+                const canvas = canvases[i];
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawAxes(ctx, canvas);
+                drawFunction(ctx, canvas, func);
+                drawPoint(ctx, canvas, x, func(x));
+
+                ctx.fillStyle = 'var(--text)';
+                ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                if (i === 8) {
+                    ctx.fillText('Combined Output', canvas.width / 2, 25);
+                } else {
+                    ctx.fillText(`Neuron ${i + 1}`, canvas.width / 2, 25);
+                }
+            });
+        }
+
+        const slider = document.getElementById('xSlider');
+        const xValueDisplay = document.getElementById('xValue');
+
+        slider.addEventListener('input', (e) => {
+            const x = parseFloat(e.target.value);
+            xValueDisplay.textContent = x.toFixed(2);
+            updatePlots(x);
+        });
+
+        updatePlots(0);
+    </script>
+</body>
+
+</html>

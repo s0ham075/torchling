@@ -1,4 +1,4 @@
-from layer import Layer
+from neural_network.layer import Layer
 import numpy as np
 
 class Hidden(Layer):

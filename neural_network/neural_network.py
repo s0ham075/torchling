@@ -1,5 +1,5 @@
 import numpy as np
-from hidden import Hidden
+from neural_network.hidden import Hidden
 
 
 class NeuralNetwork():
@@ -22,8 +22,18 @@ class NeuralNetwork():
         
         return input
     
-    def train(self,x_train,y_train,epochs=100,learning_rate=0.001):
+    def train(self,x_train,y_train,epochs=100,learning_rate=0.01):
+        self.error = 1
         for _ in range(epochs):
+            if self.error <=0.001:
+                learning_rate = 0.001
+            
+            if self.error <=0.0001:
+                learning_rate = 0.0001
+
+            if self.error <=0.00001:
+                learning_rate = 0.00001
+
             error = 0
             for i in range(len(x_train)):
                 output = self.predict(x_train[i])
@@ -33,7 +43,10 @@ class NeuralNetwork():
 
                 for layer in reversed(self.layers):
                     d_y = layer.backward(d_y,learning_rate)
+                
+            self.error = error
 
             if _ % 10 == 0:
                 print(f'Epoch: {_}, Error: {error/len(x_train)}')
+                
                 
